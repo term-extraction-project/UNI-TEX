@@ -1,20 +1,19 @@
+# Installing all necessary libraries and loading ACTER
+
 import nltk
 from nltk.util import ngrams
 nltk.download("punkt")
 import string
 import spacy
 ! git clone https://github.com/AylaRT/ACTER.git
-
 import os
 import pandas as pd
 
 
 domains = ["corp", "equi", "wind","htfl"]
 langs   = ["en", "fr", "nl"]
-
 domain   = domains[0]       # Selecting a domain
 language = langs[0]
-
 texts=[]
 file_names=[]
 
@@ -46,12 +45,12 @@ print('True terms mwe: ', len(true_terms_mwe))
 
 punc = list(string.punctuation)
 
+#####################################################################################################################################
 
 
 
 
-
-
+#____________________________________Loading stop words depending on language____________________________________________________
 
 import requests
 
@@ -73,17 +72,11 @@ elif language=="nl":
       url = 'https://raw.githubusercontent.com/stopwords-iso/stopwords-nl/master/stopwords-nl.txt'
       stop_words = (requests.get(url).text).split("\n")
       nlp = spacy.load("nl_core_news_sm")
+#####################################################################################################################################
 
 
 
-
-
-
-
-
-
-
-
+#____________________________________Unigram Extraction____________________________________________________
 
 from spacy.lang.char_classes import ALPHA, ALPHA_LOWER, ALPHA_UPPER
 from spacy.lang.char_classes import CONCAT_QUOTES, LIST_ELLIPSES, LIST_ICONS
@@ -109,13 +102,6 @@ infixes = (
 infix_re = compile_infix_regex(infixes)
 nlp.tokenizer.infix_finditer = infix_re.finditer
 
-
-
-
-
-
-
-
 import regex as re
 
 pattern = r'^[\p{L}\d]+$'
@@ -138,7 +124,6 @@ for tex in texts:
                                              len(set(w).intersection(set(punc)))==0 and
                                              re.match(pattern, w)]
         text_token= filter_words(text_token)
-
         unigrams+=text_token
 
 print(len(set(unigrams)))
@@ -146,14 +131,7 @@ print(len(set(unigrams)))
 
 
 
-
-
-
-
-
-
-
-
+#____________________________________Semantic filtering based on stop words____________________________________________________
 
 if language=="en":
       !pip install gensim
@@ -174,17 +152,6 @@ elif language=="nl":
      from huggingface_hub import hf_hub_download
      model_path = hf_hub_download(repo_id="facebook/fasttext-nl-vectors", filename="model.bin")
      fasttext = fasttext.load_model(model_path)
-
-
-
-
-
-
-
-
-
-
-
 
 
 import numpy as np
@@ -239,18 +206,11 @@ similar_words = find_similar_words(words1, words2, threshold=th)
 print(f'Unigrams with cosine similarity higher than {th} with any stop-word:')
 print(similar_words)
 
+#####################################################################################################################################
 
 
 
-
-
-
-
-
-
-
-
-
+#____________________________________Evaluation____________________________________________________
 
 def calculate_metrics(true_terms, extracted_terms):
     true_positives = len(true_terms.intersection(extracted_terms))
@@ -264,15 +224,6 @@ def calculate_metrics(true_terms, extracted_terms):
     return precision, recall, f1_score
 
 
-
-
-
-
-
-
-
-
-
 uni = set(unigrams)-set(similar_words)
 
 precision, recall, f1_score=calculate_metrics(true_terms_uni, uni)
@@ -282,16 +233,11 @@ print("Precision:", round(precision*100,2))
 print("Recall:", round(recall*100,2))
 print("F1 Score:", round(f1_score*100,2))
 
+#####################################################################################################################################
 
 
 
-
-
-
-
-
-
-
+#____________________________________Visualization of results____________________________________________________
 
 ttu_specific = []          # Specific_Term
 ttu_comon = []             # Common_Term
@@ -323,13 +269,6 @@ ttu_comon = set(ttu_comon)             # Common_Term
 ttu_NE = set(ttu_NE)                # Named_Entity
 ttu_ood = set(ttu_ood)             # OOD_Term
 ttu = set(ttu)
-
-
-
-
-
-
-
 
 import matplotlib.pyplot as plt
 
@@ -366,21 +305,10 @@ for i in range(0,105,5):
         print(uni - (uni-true_terms_l)-ttu_specific-ttu_comon-ttu_NE-ttu_ood)
 
 
-
-
-
-
-
-
-
-
-
-
+#____________________________________Figure 1_______________________________________________________
 
 plt.figure(figsize=(10, 6))
-
 plt.axvline(x=0.4, color='purple', linewidth=1)
-
 plt.plot(x, p, label='Precision', marker='o')
 plt.plot(x, r, label='Recall', marker='s')
 plt.plot(x, f1, label='F1 score', marker='^')
@@ -389,37 +317,24 @@ plt.xlabel('Threshold', fontsize=12)
 plt.ylabel('Metrics', fontsize=12)
 plt.title(f'{domain}({language})', fontsize=14)
 
-
 plt.legend(fontsize=10)
 plt.tight_layout()
 
 plt.grid(axis='y', color='lightgrey', linestyle='-', linewidth=0.7)
 plt.legend(loc='upper left', fontsize=10, bbox_to_anchor=(1.05, 1))
 
-
 ax = plt.gca()
 ax.set_ylim(0, 1)
 ax.set_xlim(0, 1)
-
 ax.spines['top'].set_color('lightgrey')
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_linewidth(0.7)
 ax.spines['left'].set_color('black')
 ax.spines['bottom'].set_color('black')
-
 plt.show()
 
 
-
-
-
-
-
-
-
-
-
-
+#____________________________________Figure 2_______________________________________________________
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -463,7 +378,6 @@ ax.spines['left'].set_color('black')
 ax.spines['bottom'].set_color('black')
 
 plt.show()
-
 
 
 
